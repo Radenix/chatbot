@@ -59,8 +59,12 @@ const UserTable = () => {
         <table className="min-w-full bg-white border-collapse">
           <thead>
             <tr className="font-Manrope">
-              <th className="px-4 py-[13px] font-medium text-left">Name</th>
-              <th className="px-4 py-[13px] font-medium text-left">Email</th>
+              <th className="px-4 py-[13px] font-medium text-left">Business Name</th>
+              <th className="px-4 py-[13px] font-medium text-left">Business Type</th>
+              <th className="px-4 py-[13px] font-medium text-left">Business Acc ID</th>
+              <th className="px-4 py-[13px] font-medium text-left">Instagram Acc</th>
+              <th className="px-4 py-[13px] font-medium text-left">Facebook Acc</th>
+              <th className="px-4 py-[13px] font-medium text-left">Telegram Manager</th>
               <th className="px-4 py-[13px] font-medium text-left">Role</th>
               <th className="px-4 py-[13px] font-medium">Action</th>
             </tr>
@@ -68,9 +72,14 @@ const UserTable = () => {
           <tbody>
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
-                <tr key={user.id} className="border-t font-Manrope py-3">
+                <tr key={user.id} className="border-t font-Manrope py-3 ">
                   <td className="px-4 py-[25px]">{user.username}</td>
-                  <td className="px-4 py-[13px] text-[#637587]">{user.email}</td>
+                  <td className="px-4 py-[25px]">Sales</td>
+                  <td className="px-4 py-[25px]">133343434</td>
+                  <td className="px-4 py-[25px]">https://www.instagram.com/my_business</td>
+                  <td className="px-4 py-[25px]">https://www.facebook.com/my_business</td>
+                  <td className="px-4 py-[25px]">@manager_username</td>
+                  
                   <td className="px-4 py-[13px] text-center ">
                     <span className="bg-[#F0F2F5] text-[#121417] w-24 py-1 rounded-xl flex justify-center">
                         User
@@ -79,7 +88,7 @@ const UserTable = () => {
                   <td className="px-4 py-[13px] text-center">
                     <button
                       onClick={() => handleDelete(user.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 break-keep"
                     >
                       Delete
                     </button>
@@ -88,7 +97,7 @@ const UserTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="3" className="p-4 text-center text-gray-500">
+                <td colSpan="8" className="p-4 text-center text-gray-500">
                   There are no users
                 </td>
               </tr>
