@@ -1,4 +1,3 @@
-// app/admin/users/page.jsx
 import UserTable from "../../components/admin/UserTable";
 
 const AdminUsersPage = () => {

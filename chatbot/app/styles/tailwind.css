@@ -32,7 +32,6 @@
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Tailwind sınıflarıyla bu özellikleri uygulayacağız */
 
 td,th{
   word-break: break-word;
