@@ -1,4 +1,5 @@
-'use client'
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from "../components/admin/Sidebar";
@@ -7,50 +8,27 @@ import axios from 'axios';
 const AdminLayout = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
-
-  const getCookiesFromResponse = (response) => {
-    const setCookieHeader = response.headers['set-cookie'];
-    if (setCookieHeader) {
-      return setCookieHeader.join('; ');
-    }
-    return '';
-  };
 
   useEffect(() => {
     const checkUserStatus = async () => {
       try {
-        // İlk istekte çerezleri al
-        const initialResponse = await axios.get('https://enabled-prompt-vervet.ngrok-free.app/api/v1/user/status', {
+        // Send the request with `withCredentials` to include cookies automatically
+        const response = await axios.get('https://enabled-prompt-vervet.ngrok-free.app/api/v1/user/status', {
           headers: {
             'Content-Type': 'application/json',
           },
+          withCredentials: true, // Ensures cookies are sent with the request
         });
 
-        const cookies = getCookiesFromResponse(initialResponse);
-        
-        if (cookies) {
-          // İkinci istekte çerezi gönder
-          const response = await axios.get('https://enabled-prompt-vervet.ngrok-free.app/api/v1/user/status', {
-            headers: {
-              'Content-Type': 'application/json',
-              'Cookie': cookies, // Manuel olarak alınan çerezleri ekle
-            },
-          });
-
-          if (response.data.logged_in) {
-            setIsLoggedIn(true);
-            setIsAdmin(response.data.admin);
-          } else {
-            router.push('/auth/login');
-          }
+        if (response.data.logged_in) {
+          setIsAdmin(response.data.admin);
         } else {
-          router.push('/auth/login');
+          router.push('/auth/login'); // Redirect to login if not logged in
         }
       } catch (error) {
         console.error('User status check failed:', error);
-        router.push('/auth/login');
+        router.push('/auth/login'); // Redirect to login if there's an error
       } finally {
         setLoading(false);
       }
@@ -61,10 +39,8 @@ const AdminLayout = ({ children }) => {
 
   if (loading) return <div>Loading...</div>;
 
-  if (!isLoggedIn) return null;
-
   if (!isAdmin) {
-    router.push('/user/dashboard');
+    // router.push('/user/dashboard'); // Redirect non-admin users to their dashboard
     return null;
   }
 
