@@ -1,29 +1,31 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const UserTable = () => {
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhaXN0YXRpb24tQjc2ME0tUHJvLVJTIiwic3ViIjoiMDU1NzI1MDQwNSJ9.g09CK3Yb7bJQa9c_QQsiGj0XmEM1VJi0C4B0AqwXIbk";
-
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const usersPerPage = 5;
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(
-          "https://enabled-prompt-vervet.ngrok-free.app/admin/users",
+          `https://enabled-prompt-vervet.ngrok-free.app/api/v1/admin/users`, {withCredentials: true},
           {
-            headers: {
-              Authorization: `Bearer ${token}`, 
+            params: {
+              page: currentPage * usersPerPage + 1, // Calculate the correct page (offset)
+              pageSize: usersPerPage, // Limit
             },
+            
           }
         );
-        console.log(response.data)
-        setUsers(response.data.users); 
+        setUsers(response.data.users);
+        setTotalCount(response.data.totalCount);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -32,7 +34,7 @@ const UserTable = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [currentPage]); // Trigger when currentPage changes
 
   const filteredUsers = users.filter(
     (user) =>
@@ -41,20 +43,47 @@ const UserTable = () => {
       user.role?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = (id) => {
-    const confirmDelete = window.confirm("Are you sure to delete this user?");
-    if (confirmDelete) {
-      setUsers(users.filter((user) => user.id !== id));
+  const handleDelete = (id, role) => {
+    if (role === "admin") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "You cannot delete an admin user!",
+      });
+    } else {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, keep it",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setUsers(users.filter((user) => user.id !== id));
+          Swal.fire("Deleted!", "The user has been deleted.", "success");
+        }
+      });
     }
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).format(date);
+  };
+
+  // Calculate the total number of pages based on totalCount and usersPerPage
+  const totalPages = Math.ceil(totalCount / usersPerPage);
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
   return (
@@ -88,7 +117,6 @@ const UserTable = () => {
         </div>
       </div>
 
-
       <div className="rounded-[12px] overflow-hidden border border-[#DBE0E5]">
         {isLoading ? (
           <div className="p-4 text-center text-gray-500">Loading...</div>
@@ -96,23 +124,17 @@ const UserTable = () => {
           <table className="min-w-full bg-white border-collapse">
             <thead>
               <tr className="font-Manrope">
+                <th className="px-4 py-[13px] font-medium text-left">Name</th>
+                <th className="px-4 py-[13px] font-medium text-left">Type</th>
+                <th className="px-4 py-[13px] font-medium text-left">Phone</th>
                 <th className="px-4 py-[13px] font-medium text-left">
-                  Business Name
+                  Instagram
                 </th>
                 <th className="px-4 py-[13px] font-medium text-left">
-                  Business Type
+                  Facebook
                 </th>
                 <th className="px-4 py-[13px] font-medium text-left">
-                  Phone
-                </th>
-                <th className="px-4 py-[13px] font-medium text-left">
-                  Instagram Acc
-                </th>
-                <th className="px-4 py-[13px] font-medium text-left">
-                  Facebook Acc
-                </th>
-                <th className="px-4 py-[13px] font-medium text-left">
-                  Telegram Manager
+                  Telegram
                 </th>
                 <th className="px-4 py-[13px] font-medium text-left">
                   Joined At
@@ -126,21 +148,38 @@ const UserTable = () => {
                 filteredUsers.map((user) => (
                   <tr key={user.id} className="border-t font-Manrope py-3">
                     <td className="px-4 py-[25px]">{user.businessName}</td>
-                    <td className="px-4 py-[25px] text-[#637587]">{user.businessType}</td>
-                    <td className="px-4 py-[25px] text-[#637587]">{user.phone}</td>
-                    <td className="px-4 py-[25px] text-[#637587]">{user.instagramAccount}</td>
-                    <td className="px-4 py-[25px] text-[#637587]">{user.facebookAccount}</td>
-                    <td className="px-4 py-[25px] text-[#637587]">{user.telegramManager}</td>
-                    <td className="px-4 py-[25px] text-[#637587]">{formatDate(user.joinedAt)}</td>
+                    <td className="px-4 py-[25px] text-[#637587]">
+                      {user.businessType}
+                    </td>
+                    <td className="px-4 py-[25px] text-[#637587]">
+                      {user.phone}
+                    </td>
+                    <td className="px-4 py-[25px] text-[#637587]">
+                      {user.instagramAccount}
+                    </td>
+                    <td className="px-4 py-[25px] text-[#637587]">
+                      {user.facebookAccount}
+                    </td>
+                    <td className="px-4 py-[25px] text-[#637587]">
+                      {user.telegramManager}
+                    </td>
+                    <td className="px-4 py-[25px] text-[#637587]">
+                      {formatDate(user.joinedAt)}
+                    </td>
                     <td className="px-4 py-[13px] text-center">
                       <span className="bg-[#F0F2F5] text-[#121417] w-24 py-1 rounded-xl flex justify-center">
                         {user.role}
-                      </span>    
+                      </span>
                     </td>
                     <td className="px-4 py-[13px] text-center">
                       <button
-                        onClick={() => handleDelete(user.id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 break-keep"
+                        onClick={() => handleDelete(user.id, user.role)}
+                        className={`bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 break-keep ${
+                          user.role === "admin"
+                            ? "cursor-not-allowed opacity-50"
+                            : ""
+                        }`}
+                        disabled={user.role === "admin"}
                       >
                         Delete
                       </button>
@@ -157,6 +196,31 @@ const UserTable = () => {
             </tbody>
           </table>
         )}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-4 space-x-2">
+        <button
+          onClick={() =>
+            setCurrentPage(currentPage > 0 ? currentPage - 1 : 0)
+          }
+          className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-all duration-300 flex items-center justify-center"
+          disabled={currentPage === 0}
+        >
+          &lt;
+        </button>
+        <span className="flex items-center">
+          Page {currentPage + 1} of {totalPages}
+        </span>
+        <button
+          onClick={() =>
+            setCurrentPage(currentPage < totalPages - 1 ? currentPage + 1 : currentPage)
+          }
+          className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-all duration-300 flex items-center justify-center"
+          disabled={currentPage === totalPages - 1}
+        >
+          &gt;
+        </button>
       </div>
     </div>
   );
